@@ -1,4 +1,4 @@
-# Testing Strategy — Unicred Voting API
+# Testing Strategy —  Voting API
 
 ## 1. Diagnóstico do Problema Identificado
 

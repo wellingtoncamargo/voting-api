@@ -1,12 +1,12 @@
 services:
   app:
     build: .
-    container_name: unicred_api
+    container_name: arckwell_api
     ports:
       - "8000:8000"
     environment:
       MONGODB_URL: mongodb://mongo:27017
-      MONGODB_DB_NAME: unicred_voting
+      MONGODB_DB_NAME: arckwell_voting
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       VOTER_VALIDATION_URL: https://user-info.herokuapp.com
       SESSION_CLOSE_INTERVAL_SECONDS: 30
@@ -16,18 +16,18 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - unicred_net
+      - arckwell_net
     restart: unless-stopped
 
   mongo:
     image: mongo:7.0
-    container_name: unicred_mongo
+    container_name: arckwell_mongo
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
     networks:
-      - unicred_net
+      - arckwell_net
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -36,12 +36,12 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: unicred_rabbitmq
+    container_name: arckwell_rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     networks:
-      - unicred_net
+      - arckwell_net
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
@@ -52,5 +52,5 @@ volumes:
   mongo_data:
 
 networks:
-  unicred_net:
+  arckwell_net:
     driver: bridge

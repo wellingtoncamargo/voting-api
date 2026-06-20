@@ -1,10 +1,10 @@
-# Plano de Desenvolvimento e Teste - Desafio Unicred
+# Plano de Desenvolvimento e Teste - Desafio Arckwell
 
 ## 1. Compreensão e Requisitos (2-3 Dias)
 
 *   **Objetivo:** Entender profundamente o escopo, os requisitos e as restrições do desafio.
 *   **Atividades:**
-    *   Análise Detalhada do `DesafioUnicred.md`
+    *   Análise Detalhada do `DesafioArckwell.md`
     *   Mapeamento de Casos de Uso:
         *   `Criar_Agenda()` - Adicionar uma nova pauta de votação.
         *   `Iniciar_Sessao_de_Votacao()` - Lançar uma sessão de votação.

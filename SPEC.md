@@ -1,4 +1,4 @@
-# SPEC — Unicred Voting API
+# SPEC — Arckwell Voting API
 ## Estado atual da aplicação · Junho 2026
 
 ---
@@ -304,7 +304,7 @@ pytest tests/ -v
 | Variável                         | Padrão                              | Descrição                           |
 |----------------------------------|-------------------------------------|-------------------------------------|
 | `MONGODB_URL`                    | `mongodb://mongo:27017`             | URL de conexão MongoDB              |
-| `MONGODB_DB_NAME`                | `unicred_voting`                    | Nome do banco                       |
+| `MONGODB_DB_NAME`                | `Arckwell_voting`                    | Nome do banco                       |
 | `RABBITMQ_URL`                   | `amqp://guest:guest@rabbitmq:5672/` | URL de conexão RabbitMQ             |
 | `VOTER_VALIDATION_URL`           | `https://user-info.herokuapp.com`   | URL da API externa de CPF           |
 | `VOTER_VALIDATION_ENABLED`       | `false`                             | Habilitar consulta à API externa    |

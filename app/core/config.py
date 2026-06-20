@@ -2,12 +2,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "Unicred Voting API"
+    APP_NAME: str = "Arckwell Voting API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
     MONGODB_URL: str = "mongodb://mongo:27017"
-    MONGODB_DB_NAME: str = "unicred_voting"
+    MONGODB_DB_NAME: str = "arckwell_voting"
 
     RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"
 

@@ -1,4 +1,4 @@
-# Tech Debt — Unicred Voting API
+# Tech Debt — Arckwell Voting API
 
 > Registro de dívidas técnicas identificadas, priorizadas por impacto e esforço.
 > Atualizado em: Junho 2026

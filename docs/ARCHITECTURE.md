@@ -1,4 +1,4 @@
-# Architecture Decision Records — Unicred Voting API
+# Architecture Decision Records — Arckwell Voting API
 
 > Registro das principais decisões técnicas e seus fundamentos.
 
