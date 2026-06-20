@@ -14,6 +14,8 @@ _client: AsyncIOMotorClient | None = None
 async def connect_db() -> None:
     global _client
     logger.info("Conectando ao MongoDB...", extra={"event": "db_connect_start"})
+    print("MONGODB_URL =", settings.MONGODB_URL)
+    print("DB_NAME =", settings.MONGODB_DB_NAME)
     _client = AsyncIOMotorClient(settings.MONGODB_URL)
     await init_beanie(
         database=_client[settings.MONGODB_DB_NAME],
