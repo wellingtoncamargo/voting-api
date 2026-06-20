@@ -4,6 +4,10 @@ API REST para gerenciamento de pautas e sessões de votação em assembleias coo
 
 ---
 
+## Licença
+
+Este projeto está licenciado sob a licença MIT. Consulte o arquivo LICENSE para mais detalhes.
+
 ## Sumário
 
 - [Visão Geral](#visão-geral)
