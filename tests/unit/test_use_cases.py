@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from app.application.use_cases.abrir_sessao import AbrirSessaoUseCase
 from app.application.use_cases.atualizar_pauta import AtualizarPautaUseCase
 from app.application.use_cases.cadastrar_associado import CadastrarAssociadoUseCase
+from app.application.use_cases.atualizar_perfil_associado import AtualizarPerfilAssociadoUseCase
 from app.application.use_cases.criar_pauta import CriarPautaUseCase
 from app.application.use_cases.deletar_associado import DeletarAssociadoUseCase
 from app.application.use_cases.deletar_pauta import DeletarPautaUseCase
@@ -16,10 +17,11 @@ from app.application.use_cases.listar_sessoes import ListarSessoesUseCase
 from app.application.use_cases.listar_votos import ListarVotosUseCase
 from app.application.use_cases.obter_resultado import ObterResultadoUseCase
 from app.application.use_cases.registrar_voto import RegistrarVotoUseCase
-from app.domain.entities.models import StatusSessao, VotoEnum
+from app.domain.entities.models import PerfilAssociado, StatusSessao, VotoEnum
 from app.domain.exceptions.exceptions import (
     AssociadoJaCadastradoError,
     AssociadoNaoEncontradoError,
+    PermissaoNegadaError,
     PautaNaoAtualizadaError,
     PautaNaoEncontradaError,
     SessaoEncerradaError,
@@ -53,6 +55,7 @@ def _associado(associado_id="assoc-1"):
     m = MagicMock()
     m.id = associado_id
     m.cpf = "52998224725"
+    m.role = PerfilAssociado.USER
     m.created_at = datetime.now()
     return m
 
@@ -360,11 +363,40 @@ class TestDeletarAssociadoUseCase:
     async def test_should_delete_associado(self):
         repo = AsyncMock()
         repo.buscar_por_id.return_value = _associado()
-        await DeletarAssociadoUseCase(repo).executar("assoc-1")
+        await DeletarAssociadoUseCase(repo).executar("assoc-1", _associado("assoc-1"))
         repo.deletar.assert_called_once()
 
     async def test_should_raise_when_not_found(self):
         repo = AsyncMock()
         repo.buscar_por_id.return_value = None
         with pytest.raises(AssociadoNaoEncontradoError):
-            await DeletarAssociadoUseCase(repo).executar("x")
+            await DeletarAssociadoUseCase(repo).executar("x", _associado("assoc-1"))
+
+    async def test_should_allow_self_delete(self):
+        repo = AsyncMock()
+        repo.buscar_por_id.return_value = _associado("assoc-1")
+        await DeletarAssociadoUseCase(repo).executar("assoc-1", _associado("assoc-1"))
+        repo.deletar.assert_called_once()
+
+    async def test_should_reject_foreign_delete_for_non_admin(self):
+        repo = AsyncMock()
+        repo.buscar_por_id.return_value = _associado("assoc-2")
+        with pytest.raises(PermissaoNegadaError):
+            await DeletarAssociadoUseCase(repo).executar("assoc-2", _associado("assoc-1"))
+
+
+class TestAtualizarPerfilAssociadoUseCase:
+    async def test_should_change_profile_as_admin(self):
+        repo = AsyncMock()
+        admin = _associado("admin-1")
+        admin.role = PerfilAssociado.ADMIN
+        repo.buscar_por_id.return_value = _associado("assoc-1")
+        repo.atualizar_perfil.return_value = _associado("assoc-1")
+        repo.atualizar_perfil.return_value.role = PerfilAssociado.ADMIN
+        result = await AtualizarPerfilAssociadoUseCase(repo).executar("assoc-1", PerfilAssociado.ADMIN, admin)
+        assert result.role == PerfilAssociado.ADMIN
+
+    async def test_should_reject_non_admin(self):
+        repo = AsyncMock()
+        with pytest.raises(PermissaoNegadaError):
+            await AtualizarPerfilAssociadoUseCase(repo).executar("assoc-1", PerfilAssociado.ADMIN, _associado("assoc-2"))

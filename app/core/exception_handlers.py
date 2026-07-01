@@ -5,9 +5,11 @@ from app.domain.exceptions.exceptions import (
     AssociadoImpedidoError,
     AssociadoJaCadastradoError,
     AssociadoNaoEncontradoError,
+    AutenticacaoInvalidaError,
     CpfInvalidoError,
     PautaNaoAtualizadaError,
     PautaNaoEncontradaError,
+    PermissaoNegadaError,
     SessaoEncerradaError,
     SessaoJaAtivaError,
     SessaoNaoEncontradaError,
@@ -60,3 +62,12 @@ def register_exception_handlers(app) -> None:
     @app.exception_handler(PautaNaoAtualizadaError)
     async def _(r: Request, e: PautaNaoAtualizadaError):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(e)})
+
+    @app.exception_handler(AutenticacaoInvalidaError)
+    async def _(r: Request, e: AutenticacaoInvalidaError):
+        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": str(e)})
+
+    @app.exception_handler(PermissaoNegadaError)
+    async def _(r: Request, e: PermissaoNegadaError):
+        return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": str(e)})
+

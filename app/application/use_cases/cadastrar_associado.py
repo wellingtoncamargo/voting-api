@@ -1,6 +1,7 @@
 import logging
 
-from app.domain.entities.models import Associado
+from app.core.config import settings
+from app.domain.entities.models import Associado, PerfilAssociado
 from app.domain.exceptions.exceptions import AssociadoJaCadastradoError
 from app.infrastructure.external.voter_validation_client import VoterValidationClient
 from app.infrastructure.repositories.associado_repository import AssociadoRepository
@@ -20,7 +21,8 @@ class CadastrarAssociadoUseCase:
         if existente:
             raise AssociadoJaCadastradoError(f"CPF {cpf} já cadastrado.")
 
-        associado = Associado.model_construct(cpf=cpf)
+        role = PerfilAssociado.ADMIN if settings.INITIAL_ADMIN_CPF and cpf == settings.INITIAL_ADMIN_CPF else PerfilAssociado.USER
+        associado = Associado.model_construct(cpf=cpf, role=role)
         associado = await self._repo.criar(associado)
 
         logger.info(

@@ -3,6 +3,8 @@ from typing import Optional, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
+from app.domain.entities.models import PerfilAssociado
+
 T = TypeVar("T")
 
 
@@ -67,14 +69,28 @@ class AssociadoCreateRequest(BaseModel):
 class AssociadoResponse(BaseModel):
     id: str
     cpf: str
+    role: PerfilAssociado
     created_at: datetime
+
+
+class AssociadoRoleUpdateRequest(BaseModel):
+    role: PerfilAssociado
+
+
+class TokenRequest(BaseModel):
+    cpf: str = Field(..., min_length=11, max_length=11, pattern=r"^\d{11}$")
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    associado: AssociadoResponse
 
 
 # ── Voto ─────────────────────────────────────────────────────────────────────
 
 class VotoCreateRequest(BaseModel):
     sessao_id: str = Field(..., examples=["uuid-da-sessao"])
-    associado_id: str = Field(..., examples=["uuid-do-associado"])
     voto: str = Field(..., pattern=r"^(SIM|NAO)$", examples=["SIM"])
 
 

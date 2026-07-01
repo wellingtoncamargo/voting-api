@@ -25,6 +25,12 @@ class AssociadoImpedidoError(Exception):
 class CpfInvalidoError(Exception):
     """CPF inválido matematicamente ou não encontrado na API externa."""
 
+class AutenticacaoInvalidaError(Exception):
+    """Token bearer inválido ou expirado."""
+
+class PermissaoNegadaError(Exception):
+    """Usuário autenticado não tem permissão para executar a ação."""
+
 class PautaNaoAtualizadaError(Exception):
     """Nenhum campo válido fornecido para atualização."""
 

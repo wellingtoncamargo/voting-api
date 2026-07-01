@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "Arckwell Voting API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
+    AUTH_SECRET_KEY: str = "change-me-in-production"
+    AUTH_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+    INITIAL_ADMIN_CPF: str | None = None
 
     MONGODB_URL: str = "mongodb://mongo:27017"
     MONGODB_DB_NAME: str = "arckwell_voting"

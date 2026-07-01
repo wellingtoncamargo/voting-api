@@ -2,6 +2,12 @@
 
 API REST para gerenciamento de pautas e sessões de votação em assembleias cooperativas. Desenvolvida como desafio técnico com FastAPI, MongoDB e Clean Architecture.
 
+Agora a API também suporta autenticação por CPF com bearer token e perfis de acesso:
+
+- `ADMIN`: gerencia pautas, sessões e perfis
+- `USER`: vota e pode excluir o próprio cadastro
+- `GET` de votos e associados continuam públicos
+
 ---
 
 ## Licença
@@ -31,6 +37,10 @@ No cooperativismo, cada associado possui um voto e as decisões são tomadas em 
 3. Abertura de sessões de votação com tempo configurável
 4. Registro de votos (SIM ou NÃO, um por associado por sessão)
 5. Apuração automática do resultado
+6. Autenticação por CPF com bearer token
+7. Bootstrap automático do primeiro admin via `INITIAL_ADMIN_CPF`
+
+O bootstrap inicial cria ou promove o associado informado em `INITIAL_ADMIN_CPF` para `ADMIN`, permitindo que o sistema suba já com um usuário capaz de gerenciar perfis.
 
 ---
 
@@ -63,6 +73,7 @@ api → application → domain ← infrastructure
 app/
 ├── api/v1/
 │   ├── routes/
+│   │   ├── auth.py         ← Login por CPF / bearer token
 │   │   ├── pautas.py       ← Endpoints de pautas e sessões
 │   │   ├── votos.py        ← Endpoints de votos
 │   │   └── associados.py   ← Endpoints de associados
@@ -153,11 +164,12 @@ uvicorn app.main:app --reload
 ### Fluxo principal
 
 ```
-1. Cadastrar associado    → POST /api/v1/associados
-2. Criar pauta            → POST /api/v1/pautas
-3. Abrir sessão           → POST /api/v1/pautas/{id}/sessao
-4. Votar                  → POST /api/v1/votos
-5. Consultar resultado    → GET  /api/v1/pautas/{id}/resultado
+1. Cadastrar associado        → POST /api/v1/associados
+2. Gerar token                → POST /api/v1/auth/token
+3. Criar pauta                → POST /api/v1/pautas (ADMIN)
+4. Abrir sessão               → POST /api/v1/pautas/{id}/sessao (ADMIN)
+5. Votar                      → POST /api/v1/votos (autenticado)
+6. Consultar resultado        → GET  /api/v1/pautas/{id}/resultado
 ```
 
 ---
@@ -178,6 +190,25 @@ curl -X POST http://localhost:8000/api/v1/associados \
 }
 ```
 
+#### Gerar token
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"cpf": "52998224725"}'
+```
+```json
+{
+  "access_token": "token-assinado",
+  "token_type": "bearer",
+  "associado": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "cpf": "52998224725",
+    "role": "ADMIN",
+    "created_at": "2026-06-01T10:00:00"
+  }
+}
+```
+
 #### Listar associados (paginado)
 ```bash
 curl "http://localhost:8000/api/v1/associados?page=1&limit=20"
@@ -190,7 +221,16 @@ curl http://localhost:8000/api/v1/associados/{id}
 
 #### Remover
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/associados/{id}
+curl -X DELETE http://localhost:8000/api/v1/associados/{id} \
+  -H "Authorization: Bearer <token>"
+```
+
+#### Alterar perfil
+```bash
+curl -X PATCH http://localhost:8000/api/v1/associados/{id}/perfil \
+  -H "Authorization: Bearer <token-admin>" \
+  -H "Content-Type: application/json" \
+  -d '{"role": "ADMIN"}'
 ```
 
 #### Validar CPF (diagnóstico)
@@ -208,6 +248,7 @@ curl http://localhost:8000/api/v1/associados/validar-cpf/52998224725
 #### Criar pauta
 ```bash
 curl -X POST http://localhost:8000/api/v1/pautas \
+  -H "Authorization: Bearer <token-admin>" \
   -H "Content-Type: application/json" \
   -d '{"titulo": "Aprovação de orçamento anual", "descricao": "Votação sobre o orçamento 2026"}'
 ```
@@ -233,6 +274,7 @@ curl http://localhost:8000/api/v1/pautas/{pauta_id}
 #### Atualizar pauta
 ```bash
 curl -X PATCH http://localhost:8000/api/v1/pautas/{pauta_id} \
+  -H "Authorization: Bearer <token-admin>" \
   -H "Content-Type: application/json" \
   -d '{"titulo": "Novo título"}'
 ```
@@ -240,7 +282,8 @@ curl -X PATCH http://localhost:8000/api/v1/pautas/{pauta_id} \
 #### Remover pauta
 ```bash
 # Só funciona se não houver sessão ativa
-curl -X DELETE http://localhost:8000/api/v1/pautas/{pauta_id}
+curl -X DELETE http://localhost:8000/api/v1/pautas/{pauta_id} \
+  -H "Authorization: Bearer <token-admin>"
 ```
 
 ---
@@ -251,11 +294,13 @@ curl -X DELETE http://localhost:8000/api/v1/pautas/{pauta_id}
 ```bash
 # Com duração personalizada (em segundos)
 curl -X POST http://localhost:8000/api/v1/pautas/{pauta_id}/sessao \
+  -H "Authorization: Bearer <token-admin>" \
   -H "Content-Type: application/json" \
   -d '{"duracao_segundos": 300}'
 
 # Sem duração → usa 60 segundos por padrão
 curl -X POST http://localhost:8000/api/v1/pautas/{pauta_id}/sessao \
+  -H "Authorization: Bearer <token-admin>" \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
@@ -276,7 +321,8 @@ curl "http://localhost:8000/api/v1/pautas/{pauta_id}/sessoes"
 
 #### Encerrar sessão manualmente
 ```bash
-curl -X PATCH http://localhost:8000/api/v1/pautas/{pauta_id}/sessao/{sessao_id}/encerrar
+curl -X PATCH http://localhost:8000/api/v1/pautas/{pauta_id}/sessao/{sessao_id}/encerrar \
+  -H "Authorization: Bearer <token-admin>"
 ```
 
 #### Resultado da votação
@@ -294,12 +340,9 @@ curl http://localhost:8000/api/v1/pautas/{pauta_id}/resultado
 #### Registrar voto
 ```bash
 curl -X POST http://localhost:8000/api/v1/votos \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{
-    "sessao_id": "sessao-uuid",
-    "associado_id": "assoc-uuid",
-    "voto": "SIM"
-  }'
+  -d '{"sessao_id": "sessao-uuid", "voto": "SIM"}'
 ```
 
 #### Listar votos de uma sessão
@@ -314,7 +357,8 @@ curl "http://localhost:8000/api/v1/votos/sessao/{sessao_id}?page=1&limit=50"
 | HTTP | Situação |
 |------|----------|
 | 400  | Sessão encerrada ou sem campos para atualização |
-| 403  | Associado impedido de votar (UNABLE_TO_VOTE) |
+| 401  | Token ausente, inválido ou CPF não autenticado |
+| 403  | Associado impedido de votar ou ação restrita a administradores |
 | 404  | Recurso não encontrado |
 | 409  | Conflito: voto duplicado, sessão já ativa, CPF já cadastrado |
 | 422  | Dados inválidos (CPF com dígitos errados, voto inválido) |
@@ -356,6 +400,9 @@ Configurada via `VOTER_VALIDATION_ENABLED=true`. Em caso de falha de rede ou ind
 | `VOTER_VALIDATION_URL`           | `https://user-info.herokuapp.com`   | URL da API externa de CPF             |
 | `VOTER_VALIDATION_ENABLED`       | `false`                             | `true` para consultar API externa     |
 | `SESSION_CLOSE_INTERVAL_SECONDS` | `30`                                | Intervalo do scheduler em segundos    |
+| `AUTH_SECRET_KEY`                | `change-me-in-production`           | Chave para assinar o token            |
+| `AUTH_TOKEN_EXPIRE_MINUTES`      | `1440`                              | Expiração do token em minutos         |
+| `INITIAL_ADMIN_CPF`              | vazio                               | CPF bootstrapado como `ADMIN`         |
 | `DEBUG`                          | `false`                             | Modo debug                            |
 
 ---
@@ -373,14 +420,12 @@ pytest tests/unit/ -v
 pytest tests/api/ -v
 ```
 
-**Resultado:** 84 testes · 84 passando · 0 falhas
-
 | Tipo       | Arquivo                           | Quantidade |
 |------------|-----------------------------------|------------|
 | Unitário   | `tests/unit/test_use_cases.py`    | 43         |
 | API (HTTP) | `tests/api/test_endpoints.py`     | 41         |
 
-Os testes unitários usam `AsyncMock` em todos os repositórios — sem banco, sem rede. Os testes de API usam um `test_app` com lifespan noop — sem MongoDB, sem RabbitMQ.
+Os testes unitários usam `AsyncMock` em todos os repositórios — sem banco, sem rede. Os testes de API usam um `test_app` com lifespan noop — sem MongoDB, sem RabbitMQ. A suíte foi atualizada para refletir o novo contrato de autenticação e perfis.
 
 ---
 

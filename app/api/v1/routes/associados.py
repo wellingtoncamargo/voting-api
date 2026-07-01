@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from app.api.v1.schemas import (
     AssociadoCreateRequest,
     AssociadoResponse,
+    AssociadoRoleUpdateRequest,
     CpfValidacaoResponse,
     PaginatedResponse,
 )
+from app.api.dependencies.auth import get_current_associado, require_admin
 from app.application.use_cases.cadastrar_associado import CadastrarAssociadoUseCase
+from app.application.use_cases.atualizar_perfil_associado import AtualizarPerfilAssociadoUseCase
 from app.application.use_cases.deletar_associado import DeletarAssociadoUseCase
 from app.application.use_cases.listar_associados import ListarAssociadosUseCase
 from app.domain.exceptions.exceptions import AssociadoNaoEncontradoError
@@ -31,7 +34,7 @@ async def listar_associados(
     uc = ListarAssociadosUseCase(repo=AssociadoRepository())
     result = await uc.executar(page=page, limit=limit)
     return PaginatedResponse(
-        items=[AssociadoResponse(id=a.id, cpf=a.cpf, created_at=a.created_at) for a in result.items],
+        items=[AssociadoResponse(id=a.id, cpf=a.cpf, role=a.role, created_at=a.created_at) for a in result.items],
         total=result.total,
         page=result.page,
         limit=result.limit,
@@ -47,7 +50,7 @@ async def listar_associados(
 async def cadastrar_associado(body: AssociadoCreateRequest):
     uc = CadastrarAssociadoUseCase(repo=AssociadoRepository(), validator=VoterValidationClient())
     associado = await uc.executar(cpf=body.cpf)
-    return AssociadoResponse(id=associado.id, cpf=associado.cpf, created_at=associado.created_at)
+    return AssociadoResponse(id=associado.id, cpf=associado.cpf, role=associado.role, created_at=associado.created_at)
 
 
 @router.get(
@@ -78,7 +81,7 @@ async def buscar_associado(associado_id: str):
     associado = await AssociadoRepository().buscar_por_id(associado_id)
     if not associado:
         raise AssociadoNaoEncontradoError(f"Associado {associado_id} não encontrado.")
-    return AssociadoResponse(id=associado.id, cpf=associado.cpf, created_at=associado.created_at)
+    return AssociadoResponse(id=associado.id, cpf=associado.cpf, role=associado.role, created_at=associado.created_at)
 
 
 @router.delete(
@@ -86,6 +89,24 @@ async def buscar_associado(associado_id: str):
     status_code=204,
     summary="Remover associado",
 )
-async def deletar_associado(associado_id: str):
+async def deletar_associado(
+    associado_id: str,
+    current_associado=Depends(get_current_associado),
+):
     uc = DeletarAssociadoUseCase(repo=AssociadoRepository())
-    await uc.executar(associado_id=associado_id)
+    await uc.executar(associado_id=associado_id, solicitante=current_associado)
+
+
+@router.patch(
+    "/{associado_id}/perfil",
+    response_model=AssociadoResponse,
+    summary="Alterar perfil de associado entre user e admin",
+)
+async def alterar_perfil_associado(
+    associado_id: str,
+    body: AssociadoRoleUpdateRequest,
+    current_associado=Depends(require_admin),
+):
+    uc = AtualizarPerfilAssociadoUseCase(repo=AssociadoRepository())
+    associado = await uc.executar(associado_id=associado_id, role=body.role, solicitante=current_associado)
+    return AssociadoResponse(id=associado.id, cpf=associado.cpf, role=associado.role, created_at=associado.created_at)

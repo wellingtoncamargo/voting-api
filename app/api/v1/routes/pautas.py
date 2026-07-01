@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from app.api.dependencies.auth import require_admin
 from app.api.v1.schemas import (
     PaginatedResponse,
     PautaCreateRequest,
@@ -24,8 +25,6 @@ from app.infrastructure.repositories.voto_repository import VotoRepository
 router = APIRouter(prefix="/pautas", tags=["Pautas"])
 
 
-# ── Pautas ───────────────────────────────────────────────────────────────────
-
 @router.get(
     "",
     response_model=PaginatedResponse[PautaResponse],
@@ -38,7 +37,10 @@ async def listar_pautas(
     uc = ListarPautasUseCase(repo=PautaRepository())
     result = await uc.executar(page=page, limit=limit)
     return PaginatedResponse(
-        items=[PautaResponse(id=p.id, titulo=p.titulo, descricao=p.descricao, created_at=p.created_at) for p in result.items],
+        items=[
+            PautaResponse(id=p.id, titulo=p.titulo, descricao=p.descricao, created_at=p.created_at)
+            for p in result.items
+        ],
         total=result.total,
         page=result.page,
         limit=result.limit,
@@ -51,7 +53,7 @@ async def listar_pautas(
     status_code=201,
     summary="Criar uma nova pauta",
 )
-async def criar_pauta(body: PautaCreateRequest):
+async def criar_pauta(body: PautaCreateRequest, current_user=Depends(require_admin)):
     uc = CriarPautaUseCase(repo=PautaRepository())
     pauta = await uc.executar(titulo=body.titulo, descricao=body.descricao)
     return PautaResponse(id=pauta.id, titulo=pauta.titulo, descricao=pauta.descricao, created_at=pauta.created_at)
@@ -64,6 +66,7 @@ async def criar_pauta(body: PautaCreateRequest):
 )
 async def buscar_pauta(pauta_id: str):
     from app.domain.exceptions.exceptions import PautaNaoEncontradaError
+
     pauta = await PautaRepository().buscar_por_id(pauta_id)
     if not pauta:
         raise PautaNaoEncontradaError(f"Pauta {pauta_id} não encontrada.")
@@ -75,7 +78,11 @@ async def buscar_pauta(pauta_id: str):
     response_model=PautaResponse,
     summary="Atualizar pauta (título e/ou descrição)",
 )
-async def atualizar_pauta(pauta_id: str, body: PautaUpdateRequest):
+async def atualizar_pauta(
+    pauta_id: str,
+    body: PautaUpdateRequest,
+    current_user=Depends(require_admin),
+):
     uc = AtualizarPautaUseCase(repo=PautaRepository())
     pauta = await uc.executar(pauta_id=pauta_id, titulo=body.titulo, descricao=body.descricao)
     return PautaResponse(id=pauta.id, titulo=pauta.titulo, descricao=pauta.descricao, created_at=pauta.created_at)
@@ -86,12 +93,10 @@ async def atualizar_pauta(pauta_id: str, body: PautaUpdateRequest):
     status_code=204,
     summary="Remover pauta (somente sem sessão ativa)",
 )
-async def deletar_pauta(pauta_id: str):
+async def deletar_pauta(pauta_id: str, current_user=Depends(require_admin)):
     uc = DeletarPautaUseCase(repo=PautaRepository(), sessao_repo=SessaoRepository())
     await uc.executar(pauta_id=pauta_id)
 
-
-# ── Sessões ──────────────────────────────────────────────────────────────────
 
 @router.get(
     "/{pauta_id}/sessoes",
@@ -119,7 +124,11 @@ async def listar_sessoes(
     status_code=201,
     summary="Abrir sessão de votação em uma pauta",
 )
-async def abrir_sessao(pauta_id: str, body: SessaoCreateRequest):
+async def abrir_sessao(
+    pauta_id: str,
+    body: SessaoCreateRequest,
+    current_user=Depends(require_admin),
+):
     uc = AbrirSessaoUseCase(pauta_repo=PautaRepository(), sessao_repo=SessaoRepository())
     sessao = await uc.executar(pauta_id=pauta_id, duracao_segundos=body.duracao_segundos)
     return SessaoResponse(id=sessao.id, pauta_id=sessao.pauta_id, inicio=sessao.inicio, fim=sessao.fim, status=sessao.status)
@@ -130,7 +139,11 @@ async def abrir_sessao(pauta_id: str, body: SessaoCreateRequest):
     response_model=SessaoResponse,
     summary="Encerrar sessão manualmente",
 )
-async def encerrar_sessao(pauta_id: str, sessao_id: str):
+async def encerrar_sessao(
+    pauta_id: str,
+    sessao_id: str,
+    current_user=Depends(require_admin),
+):
     uc = EncerrarSessaoUseCase(sessao_repo=SessaoRepository(), voto_repo=VotoRepository())
     sessao = await uc.executar(sessao_id=sessao_id)
     return SessaoResponse(id=sessao.id, pauta_id=sessao.pauta_id, inicio=sessao.inicio, fim=sessao.fim, status=sessao.status)
@@ -148,3 +161,4 @@ async def obter_resultado(pauta_id: str):
         voto_repo=VotoRepository(),
     )
     return await uc.executar(pauta_id=pauta_id)
+

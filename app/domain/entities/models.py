@@ -17,6 +17,11 @@ class VotoEnum(str, Enum):
     NAO = "NAO"
 
 
+class PerfilAssociado(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
 class Pauta(Document):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     titulo: str
@@ -45,6 +50,7 @@ class Sessao(Document):
 class Associado(Document):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     cpf: str
+    role: PerfilAssociado = PerfilAssociado.USER
     created_at: datetime = Field(default_factory=datetime.now)
 
     class Settings:

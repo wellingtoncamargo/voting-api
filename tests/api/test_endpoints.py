@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+from app.api.dependencies.auth import get_current_associado
 from app.api.v1.router import router as api_v1_router
 from app.core.exception_handlers import register_exception_handlers
-from app.domain.entities.models import StatusSessao, VotoEnum
+from app.domain.entities.models import PerfilAssociado, StatusSessao, VotoEnum
 from app.domain.exceptions.exceptions import (
     AssociadoJaCadastradoError,
     AssociadoNaoEncontradoError,
@@ -37,6 +38,15 @@ async def _health():
 
 register_exception_handlers(test_app)
 test_app.include_router(api_v1_router)
+
+
+def _admin_associado():
+    associado = _associado()
+    associado.role = PerfilAssociado.ADMIN
+    return associado
+
+
+test_app.dependency_overrides[get_current_associado] = _admin_associado
 
 
 @pytest.fixture
@@ -78,6 +88,7 @@ def _associado():
     m = MagicMock()
     m.id = "assoc-abc"
     m.cpf = "52998224725"
+    m.role = PerfilAssociado.USER
     m.created_at = datetime.now()
     return m
 
@@ -269,23 +280,23 @@ class TestRegistrarVoto:
     async def test_returns_201(self, client):
         with patch("app.api.v1.routes.votos.RegistrarVotoUseCase") as M:
             M.return_value.executar = AsyncMock(return_value=_voto())
-            r = await client.post("/api/v1/votos", json={"sessao_id": "s", "associado_id": "a", "voto": "SIM"})
+            r = await client.post("/api/v1/votos", json={"sessao_id": "s", "voto": "SIM"})
         assert r.status_code == 201
 
     async def test_returns_422_invalid_voto(self, client):
-        r = await client.post("/api/v1/votos", json={"sessao_id": "s", "associado_id": "a", "voto": "TALVEZ"})
+        r = await client.post("/api/v1/votos", json={"sessao_id": "s", "voto": "TALVEZ"})
         assert r.status_code == 422
 
     async def test_returns_409_on_duplicate(self, client):
         with patch("app.api.v1.routes.votos.RegistrarVotoUseCase") as M:
             M.return_value.executar = AsyncMock(side_effect=VotoDuplicadoError("Duplicado."))
-            r = await client.post("/api/v1/votos", json={"sessao_id": "s", "associado_id": "a", "voto": "SIM"})
+            r = await client.post("/api/v1/votos", json={"sessao_id": "s", "voto": "SIM"})
         assert r.status_code == 409
 
     async def test_returns_400_on_closed_session(self, client):
         with patch("app.api.v1.routes.votos.RegistrarVotoUseCase") as M:
             M.return_value.executar = AsyncMock(side_effect=SessaoEncerradaError("Encerrada."))
-            r = await client.post("/api/v1/votos", json={"sessao_id": "s", "associado_id": "a", "voto": "NAO"})
+            r = await client.post("/api/v1/votos", json={"sessao_id": "s", "voto": "NAO"})
         assert r.status_code == 400
 
 
@@ -351,6 +362,33 @@ class TestDeletarAssociado:
             M.return_value.executar = AsyncMock(side_effect=AssociadoNaoEncontradoError("Não encontrado."))
             r = await client.delete("/api/v1/associados/x")
         assert r.status_code == 404
+
+
+class TestAlterarPerfilAssociado:
+    async def test_returns_200(self, client):
+        with patch("app.api.v1.routes.associados.AtualizarPerfilAssociadoUseCase") as M:
+            associado = _associado()
+            associado.role = PerfilAssociado.ADMIN
+            M.return_value.executar = AsyncMock(return_value=associado)
+            r = await client.patch("/api/v1/associados/assoc-abc/perfil", json={"role": "ADMIN"})
+        assert r.status_code == 200
+        assert r.json()["role"] == "ADMIN"
+
+
+class TestAuthToken:
+    async def test_returns_200(self, client):
+        with patch("app.api.v1.routes.auth.AssociadoRepository") as M:
+            M.return_value.buscar_por_cpf = AsyncMock(return_value=_associado())
+            with patch("app.api.v1.routes.auth.gerar_token_bearer", return_value="token-assinado") as G:
+                r = await client.post("/api/v1/auth/token", json={"cpf": "52998224725"})
+        assert r.status_code == 200
+        assert r.json()["access_token"] == "token-assinado"
+
+    async def test_returns_401_when_unknown_cpf(self, client):
+        with patch("app.api.v1.routes.auth.AssociadoRepository") as M:
+            M.return_value.buscar_por_cpf = AsyncMock(return_value=None)
+            r = await client.post("/api/v1/auth/token", json={"cpf": "52998224725"})
+        assert r.status_code == 401
 
 
 class TestValidarCpf:

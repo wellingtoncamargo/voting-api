@@ -7,6 +7,7 @@
 
 API REST para gerenciamento de pautas e sessões de votação em assembleias cooperativas.
 Cada associado possui um voto por pauta. Decisões são tomadas por maioria simples.
+O sistema usa autenticação por CPF com bearer token e perfis `ADMIN`/`USER`.
 
 ---
 
@@ -73,6 +74,7 @@ status      : "OPEN" | "CLOSED"
 ```
 id          : str (UUID v4)
 cpf         : str (11 dígitos, único)
+role        : "USER" | "ADMIN"
 created_at  : datetime
 ```
 Índices: `(cpf)` unique
@@ -95,6 +97,20 @@ created_at    : datetime
 
 ---
 
+### Autenticação
+
+| Método | Rota              | Descrição                             | Status |
+|--------|-------------------|---------------------------------------|--------|
+| POST   | `/auth/token`     | Gerar bearer token a partir do CPF    | 200    |
+
+Regras:
+- O token é assinado com `AUTH_SECRET_KEY`
+- `INITIAL_ADMIN_CPF` cria ou promove o primeiro admin no bootstrap
+- Rotas mutáveis exigem autenticação e perfil adequado
+- `GET` de associados, votos, pautas, sessões e resultado continuam públicos
+
+---
+
 ### Associados
 
 | Método | Rota                                    | Descrição                              | Status |
@@ -102,7 +118,8 @@ created_at    : datetime
 | GET    | `/associados`                           | Listar (paginado)                      | 200    |
 | POST   | `/associados`                           | Cadastrar (valida CPF matematicamente) | 201    |
 | GET    | `/associados/{id}`                      | Buscar por ID                          | 200    |
-| DELETE | `/associados/{id}`                      | Remover                                | 204    |
+| PATCH  | `/associados/{id}/perfil`               | Alterar perfil (admin/user)            | 200    |
+| DELETE | `/associados/{id}`                      | Remover próprio cadastro ou admin      | 204    |
 | GET    | `/associados/validar-cpf/{cpf}`         | Verificar CPF (utilitário, sem persistir) | 200 |
 
 ---
@@ -117,6 +134,10 @@ created_at    : datetime
 | PATCH  | `/pautas/{id}`                                | Atualizar título e/ou descrição        | 200    |
 | DELETE | `/pautas/{id}`                                | Remover (apenas sem sessão ativa)      | 204    |
 
+Autenticação:
+- `POST`, `PATCH` e `DELETE` exigem `ADMIN`
+- `GET` permanecem públicos
+
 ---
 
 ### Sessões
@@ -128,6 +149,10 @@ created_at    : datetime
 | PATCH  | `/pautas/{id}/sessao/{sessao_id}/encerrar`        | Encerrar sessão manualmente   | 200    |
 | GET    | `/pautas/{id}/resultado`                          | Resultado da votação          | 200    |
 
+Autenticação:
+- `POST` e `PATCH` exigem `ADMIN`
+- `GET` permanecem públicos
+
 ---
 
 ### Votos
@@ -136,6 +161,10 @@ created_at    : datetime
 |--------|-----------------------------|-------------------------|--------|
 | GET    | `/votos/sessao/{sessao_id}` | Listar votos da sessão  | 200    |
 | POST   | `/votos`                    | Registrar voto          | 201    |
+
+Autenticação:
+- `POST /votos` exige token válido
+- `GET` permanece público
 
 ---
 
@@ -267,7 +296,7 @@ Logs estruturados JSON. Eventos principais:
 | API (HTTP) | `tests/api/test_endpoints.py`     | 41   |
 | **Total**  |                                   | **84** |
 
-**84/84 passando · 0 falhas**
+Observação: a suíte foi atualizada para cobrir autenticação e perfis.
 
 ---
 
@@ -309,6 +338,9 @@ pytest tests/ -v
 | `VOTER_VALIDATION_URL`           | `https://user-info.herokuapp.com`   | URL da API externa de CPF           |
 | `VOTER_VALIDATION_ENABLED`       | `false`                             | Habilitar consulta à API externa    |
 | `SESSION_CLOSE_INTERVAL_SECONDS` | `30`                                | Intervalo do scheduler              |
+| `AUTH_SECRET_KEY`                | `change-me-in-production`           | Segredo do bearer token             |
+| `AUTH_TOKEN_EXPIRE_MINUTES`      | `1440`                              | Expiração do token                  |
+| `INITIAL_ADMIN_CPF`              | vazio                               | CPF bootstrapado como `ADMIN`       |
 
 ---
 

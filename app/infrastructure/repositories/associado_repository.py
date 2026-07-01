@@ -1,6 +1,6 @@
 from typing import Optional
 
-from app.domain.entities.models import Associado
+from app.domain.entities.models import Associado, PerfilAssociado
 
 
 class AssociadoRepository:
@@ -22,3 +22,8 @@ class AssociadoRepository:
 
     async def deletar(self, associado: Associado) -> None:
         await associado.delete()
+
+    async def atualizar_perfil(self, associado: Associado, role: PerfilAssociado) -> Associado:
+        associado.role = role
+        await associado.save()
+        return associado

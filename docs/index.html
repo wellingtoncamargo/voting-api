@@ -4,12 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Arckwell Voting API | Arckwell Tecnologia</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         * {
@@ -26,7 +24,6 @@
             --border: #334155;
             --text: #f8fafc;
             --text-secondary: #94a3b8;
-            --success: #10b981;
         }
 
         html {
@@ -41,18 +38,17 @@
         }
 
         .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: auto;
+            width: min(90%, 1200px);
+            margin: 0 auto;
         }
 
         nav {
             position: sticky;
             top: 0;
+            z-index: 1000;
             backdrop-filter: blur(15px);
             background: rgba(15, 23, 42, 0.8);
             border-bottom: 1px solid rgba(255, 255, 255, .05);
-            z-index: 1000;
         }
 
         .nav-content {
@@ -60,6 +56,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 20px 0;
+            gap: 20px;
         }
 
         .logo {
@@ -71,6 +68,8 @@
         .menu {
             display: flex;
             gap: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .menu a {
@@ -88,12 +87,8 @@
             display: flex;
             align-items: center;
             background:
-                radial-gradient(circle at top left,
-                    rgba(37, 99, 235, .3),
-                    transparent 40%),
-                radial-gradient(circle at bottom right,
-                    rgba(96, 165, 250, .2),
-                    transparent 40%);
+                radial-gradient(circle at top left, rgba(37, 99, 235, .3), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(96, 165, 250, .2), transparent 40%);
         }
 
         .hero-content {
@@ -111,17 +106,16 @@
         }
 
         h1 {
-            font-size: 4rem;
+            font-size: clamp(2.5rem, 7vw, 4rem);
             line-height: 1.1;
             margin-bottom: 20px;
         }
 
         .hero p {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             color: var(--text-secondary);
-            max-width: 700px;
-            margin: auto;
-            margin-bottom: 40px;
+            max-width: 760px;
+            margin: 0 auto 40px;
         }
 
         .buttons {
@@ -132,11 +126,21 @@
         }
 
         .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
             padding: 15px 28px;
             border-radius: 12px;
             text-decoration: none;
             font-weight: 600;
             transition: .3s;
+        }
+
+        .btn-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            flex-shrink: 0;
         }
 
         .btn-primary {
@@ -155,6 +159,20 @@
 
         .btn-secondary:hover {
             background: var(--dark-card);
+        }
+
+        .callout {
+            margin: 26px auto 0;
+            padding: 18px 20px;
+            border-radius: 16px;
+            background: rgba(96, 165, 250, .08);
+            border: 1px solid rgba(96, 165, 250, .25);
+            color: #dbeafe;
+            max-width: 860px;
+        }
+
+        .callout strong {
+            color: white;
         }
 
         section {
@@ -240,6 +258,16 @@
             margin-bottom: 20px;
         }
 
+        .code {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 8px;
+            background: rgba(148, 163, 184, .12);
+            border: 1px solid rgba(148, 163, 184, .2);
+            color: #e2e8f0;
+            font-size: .95em;
+        }
+
         footer {
             border-top: 1px solid var(--border);
             padding: 30px;
@@ -247,12 +275,7 @@
             color: var(--text-secondary);
         }
 
-        @media(max-width:768px) {
-
-            h1 {
-                font-size: 2.5rem;
-            }
-
+        @media (max-width: 768px) {
             .menu {
                 display: none;
             }
@@ -265,127 +288,95 @@
 </head>
 
 <body>
-
     <nav>
         <div class="container nav-content">
-            <div class="logo">
-                Arckwell Voting API
-            </div>
-
+            <div class="logo">Arckwell Voting API</div>
             <div class="menu">
                 <a href="#tecnologias">Tecnologias</a>
                 <a href="#arquitetura">Arquitetura</a>
-                <a href="#estatisticas">Qualidade</a>
+                <a href="#acesso">Acesso</a>
                 <a href="#api">API</a>
             </div>
             <div>
-                <img src="https://visitor-badge.laobi.icu/badge?page_id=wellingtoncamargo.voting-api" />
+                <img src="https://visitor-badge.laobi.icu/badge?page_id=wellingtoncamargo.voting-api" alt="visitor badge" />
             </div>
         </div>
     </nav>
 
     <section class="hero">
-
         <div class="container hero-content">
+            <div class="badge">FastAPI • MongoDB • RabbitMQ • Docker • CI/CD</div>
 
-            <div class="badge">
-                FastAPI • MongoDB Atlas • RabbitMQ • Docker • CI/CD
-            </div>
-
-            <h1>
-                Arckwell Voting API
-            </h1>
+            <h1>Arckwell Voting API</h1>
 
             <p>
-                Plataforma de gerenciamento de pautas, sessões e votos,
-                construída com arquitetura moderna, testes automatizados,
-                mensageria assíncrona e deploy em nuvem.
+                Plataforma de gerenciamento de pautas, sessões e votos com autenticação por CPF, perfis de acesso,
+                mensageria assíncrona, testes automatizados e deploy em nuvem.
             </p>
 
             <div class="buttons">
-
-                <a href="https://voting-api-ltxi.onrender.com/docs"
-                    target="_blank"
-                    class="btn btn-primary">
-                    🚀 Testar API
+                <a href="https://voting-api-ltxi.onrender.com/docs" target="_blank" class="btn btn-primary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M6 10.5L12 6l6 4.5V18l-6 4-6-4v-7.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                        <path d="M8.2 10.2l3.8 2.8 3.8-2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M12 13v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                    Abrir Swagger
                 </a>
-
-                <!-- <a href="https://SEU_RENDER_URL/redoc"
-                    target="_blank"
-                    class="btn btn-secondary">
-                    📖 ReDoc
-                </a> -->
-
-                <a href="https://github.com/wellingtoncamargo/voting-api"
-                    target="_blank"
-                    class="btn btn-secondary">
-                    💻 GitHub
+                <a href="https://github.com/wellingtoncamargo/voting-api" target="_blank" class="btn btn-secondary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.54 2.87 8.39 6.84 9.76.5.09.68-.22.68-.48v-1.7c-2.78.62-3.37-1.38-3.37-1.38-.45-1.18-1.1-1.49-1.1-1.49-.9-.63.07-.62.07-.62.99.07 1.51 1.04 1.51 1.04.88 1.55 2.31 1.1 2.87.84.09-.65.35-1.1.64-1.35-2.22-.26-4.56-1.15-4.56-5.13 0-1.13.39-2.06 1.03-2.79-.1-.26-.45-1.32.1-2.75 0 0 .84-.27 2.75 1.07a9.3 9.3 0 0 1 5 0c1.91-1.34 2.75-1.07 2.75-1.07.55 1.43.2 2.49.1 2.75.64.73 1.03 1.66 1.03 2.79 0 4-2.34 4.87-4.57 5.12.36.31.69.92.69 1.87v2.77c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z" />
+                    </svg>
+                    Ver GitHub
                 </a>
-
             </div>
 
+            <div class="callout">
+                <strong>Aviso de disponibilidade:</strong>
+                como este projeto está sendo executado em uma plataforma free, é comum que ao acessar o Swagger ou
+                fazer a primeira chamada na API haja demora de alguns segundos, pois o serviço pode estar reiniciando
+                ou saindo de hibernação.
+            </div>
         </div>
-
     </section>
 
     <section id="tecnologias">
-
         <div class="container">
-
-            <h2 class="section-title">
-                Tecnologias
-            </h2>
-
+            <h2 class="section-title">Tecnologias</h2>
             <div class="cards">
-
                 <div class="card">
                     <h3>FastAPI</h3>
-                    <p>Framework moderno para APIs de alta performance.</p>
+                    <p>Framework moderno para APIs assíncronas e documentadas automaticamente.</p>
                 </div>
-
                 <div class="card">
                     <h3>MongoDB Atlas</h3>
-                    <p>Banco NoSQL hospedado em nuvem.</p>
+                    <p>Persistência NoSQL para pautas, sessões, associados e votos.</p>
                 </div>
-
                 <div class="card">
                     <h3>RabbitMQ</h3>
-                    <p>Mensageria assíncrona para eventos.</p>
+                    <p>Mensageria para publicação de resultados encerrados pelo scheduler ou manualmente.</p>
                 </div>
-
                 <div class="card">
                     <h3>Docker</h3>
-                    <p>Containerização e padronização do ambiente.</p>
+                    <p>Padronização do ambiente e execução reproduzível.</p>
                 </div>
-
                 <div class="card">
                     <h3>GitHub Actions</h3>
-                    <p>Pipeline CI/CD automatizado.</p>
+                    <p>Pipeline de integração contínua.</p>
                 </div>
-
                 <div class="card">
                     <h3>Pytest</h3>
-                    <p>Testes unitários e integração.</p>
+                    <p>Testes unitários e de API para validar os contratos do projeto.</p>
                 </div>
-
             </div>
-
         </div>
-
     </section>
 
     <section id="arquitetura">
-
         <div class="container">
-
-            <h2 class="section-title">
-                Arquitetura
-            </h2>
-
+            <h2 class="section-title">Arquitetura</h2>
             <div class="architecture">
-
                 <div class="flow">
-
                     GitHub<br>
                     ↓<br>
                     GitHub Actions<br>
@@ -395,84 +386,76 @@
                     FastAPI<br>
                     ↓<br>
                     MongoDB Atlas + CloudAMQP
-
                 </div>
-
             </div>
-
         </div>
+    </section>
 
+    <section id="acesso">
+        <div class="container">
+            <h2 class="section-title">Acesso e Regras</h2>
+            <div class="cards">
+                <div class="card">
+                    <h3>Login por CPF</h3>
+                    <p>O endpoint <span class="code">POST /api/v1/auth/token</span> gera um bearer token para o associado cadastrado.</p>
+                </div>
+                <div class="card">
+                    <h3>Admin inicial</h3>
+                    <p>O primeiro admin é bootstrapado por <span class="code">INITIAL_ADMIN_CPF</span> quando a aplicação sobe.</p>
+                </div>
+                <div class="card">
+                    <h3>Perfis</h3>
+                    <p><strong>ADMIN</strong> gerencia pautas, sessões e perfis. <strong>USER</strong> vota e pode excluir o próprio cadastro.</p>
+                </div>
+                <div class="card">
+                    <h3>Endpoints públicos</h3>
+                    <p>As rotas de GET para associados, votos, pautas, sessões e resultado seguem sem autenticação.</p>
+                </div>
+            </div>
+        </div>
     </section>
 
     <section id="estatisticas">
-
         <div class="container">
-
-            <h2 class="section-title">
-                Qualidade e Engenharia
-            </h2>
-
+            <h2 class="section-title">Qualidade e Engenharia</h2>
             <div class="stats">
-
                 <div class="stat">
                     <h3>CI/CD</h3>
-                    <p>Deploy Automatizado</p>
+                    <p>Deploy automatizado</p>
                 </div>
-
                 <div class="stat">
-                    <h3>Docker</h3>
-                    <p>Container Ready</p>
+                    <h3>Auth</h3>
+                    <p>Bearer por CPF</p>
                 </div>
-
                 <div class="stat">
                     <h3>REST</h3>
-                    <p>API Documentada</p>
+                    <p>API documentada</p>
                 </div>
-
                 <div class="stat">
-                    <h3>100%</h3>
-                    <p>OpenAPI Swagger</p>
+                    <h3>2 perfis</h3>
+                    <p>ADMIN e USER</p>
                 </div>
-
             </div>
-
         </div>
-
     </section>
 
     <section id="api" class="cta">
-
         <div class="container">
-
-            <h2>
-                Explore a API agora mesmo
-            </h2>
-
+            <h2>Explore a API agora mesmo</h2>
             <p style="color:#94a3b8; margin-bottom:40px;">
-                Utilize o Swagger para criar pautas,
-                abrir sessões e registrar votos.
+                Use o Swagger para autenticar, criar pautas, abrir sessões e registrar votos.
             </p>
-
-            <a href="https://voting-api-ltxi.onrender.com/docs"
-                target="_blank"
-                class="btn btn-primary">
+            <a href="https://voting-api-ltxi.onrender.com/docs" target="_blank" class="btn btn-primary">
                 Abrir Swagger
             </a>
-
         </div>
-
     </section>
 
     <footer>
-        <p>
-            © 2026 Arckwell Tecnologia • Arckwell Voting API
-        </p>
-    
+        <p>© 2026 Arckwell Tecnologia • Arckwell Voting API</p>
         <br>
-    
-        <img src="https://visitor-badge.laobi.icu/badge?page_id=wellingtoncamargo.voting-api" />
+        <img src="https://visitor-badge.laobi.icu/badge?page_id=wellingtoncamargo.voting-api" alt="visitor badge" />
     </footer>
-
 </body>
 
 </html>

@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from app.api.dependencies.auth import get_current_associado
 from app.api.v1.schemas import PaginatedResponse, VotoCreateRequest, VotoResponse
 from app.application.use_cases.listar_votos import ListarVotosUseCase
 from app.application.use_cases.registrar_voto import RegistrarVotoUseCase
@@ -24,7 +25,16 @@ async def listar_votos(
     uc = ListarVotosUseCase(sessao_repo=SessaoRepository(), voto_repo=VotoRepository())
     result = await uc.executar(sessao_id=sessao_id, page=page, limit=limit)
     return PaginatedResponse(
-        items=[VotoResponse(id=v.id, sessao_id=v.sessao_id, associado_id=v.associado_id, voto=v.voto, created_at=v.created_at) for v in result.items],
+        items=[
+            VotoResponse(
+                id=v.id,
+                sessao_id=v.sessao_id,
+                associado_id=v.associado_id,
+                voto=v.voto,
+                created_at=v.created_at,
+            )
+            for v in result.items
+        ],
         total=result.total,
         page=result.page,
         limit=result.limit,
@@ -37,7 +47,7 @@ async def listar_votos(
     status_code=201,
     summary="Registrar voto de um associado em uma sessão",
 )
-async def registrar_voto(body: VotoCreateRequest):
+async def registrar_voto(body: VotoCreateRequest, current_associado=Depends(get_current_associado)):
     uc = RegistrarVotoUseCase(
         sessao_repo=SessaoRepository(),
         voto_repo=VotoRepository(),
@@ -45,7 +55,7 @@ async def registrar_voto(body: VotoCreateRequest):
     )
     voto = await uc.executar(
         sessao_id=body.sessao_id,
-        associado_id=body.associado_id,
+        associado_id=current_associado.id,
         voto=VotoEnum(body.voto),
     )
     return VotoResponse(
@@ -55,3 +65,4 @@ async def registrar_voto(body: VotoCreateRequest):
         voto=voto.voto,
         created_at=voto.created_at,
     )
+
