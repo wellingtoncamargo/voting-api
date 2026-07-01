@@ -379,7 +379,7 @@ class TestAuthToken:
     async def test_returns_200(self, client):
         with patch("app.api.v1.routes.auth.AssociadoRepository") as M:
             M.return_value.buscar_por_cpf = AsyncMock(return_value=_associado())
-            with patch("app.api.v1.routes.auth.gerar_token_bearer", return_value="token-assinado") as G:
+            with patch("app.api.v1.routes.auth.gerar_token_bearer", return_value="token-assinado"):
                 r = await client.post("/api/v1/auth/token", json={"cpf": "52998224725"})
         assert r.status_code == 200
         assert r.json()["access_token"] == "token-assinado"

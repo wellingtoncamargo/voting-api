@@ -3,7 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.security import decodificar_token_bearer
 from app.domain.entities.models import Associado, PerfilAssociado
-from app.domain.exceptions.exceptions import AutenticacaoInvalidaError, PermissaoNegadaError
+from app.domain.exceptions.exceptions import AutenticacaoInvalidaError
 from app.infrastructure.repositories.associado_repository import AssociadoRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -54,4 +54,3 @@ async def require_admin(current_associado: Associado = Depends(get_current_assoc
             detail="Ação restrita a administradores.",
         )
     return current_associado
-
