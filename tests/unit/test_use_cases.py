@@ -384,6 +384,15 @@ class TestDeletarAssociadoUseCase:
         with pytest.raises(PermissaoNegadaError):
             await DeletarAssociadoUseCase(repo).executar("assoc-2", _associado("assoc-1"))
 
+    async def test_should_not_delete_initial_admin(self, monkeypatch):
+        monkeypatch.setattr("app.application.use_cases.deletar_associado.settings.INITIAL_ADMIN_CPF", "52998224725")
+        repo = AsyncMock()
+        admin = _associado("admin-1")
+        admin.cpf = "52998224725"
+        repo.buscar_por_id.return_value = admin
+        with pytest.raises(PermissaoNegadaError):
+            await DeletarAssociadoUseCase(repo).executar("admin-1", admin)
+
 
 class TestAtualizarPerfilAssociadoUseCase:
     async def test_should_change_profile_as_admin(self):
